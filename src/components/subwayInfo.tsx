@@ -21,11 +21,15 @@ class Metro {
       서해선: 'border-b-[#84BD00]',
       공항철도: 'border-b-[#33BAFF]',
       신분당선: 'border-b-[#BA0C2F]',
+      경강선: 'border-b-[#0066FF]',
+      // 미지원
+      신림선:
+        'relative before:absolute before:w-full before:h-full before:top-0 before:left-0 before:block before:bg-gray-500/50 border-b-[#558BCF]',
     };
     return (
       <div
         key={key}
-        className={`shadow-xl p-5 rounded-xl border-b-[10px] ${colorDynamic[name]}`}
+        className={`overflow-hidden shadow-xl p-5 rounded-xl border-b-[10px] ${colorDynamic[name]}`}
         style={{ backgroundSize: '100%, 50px' }}
       >
         <h2>{name}</h2>
@@ -37,9 +41,9 @@ class Metro {
 const metroList = new Metro();
 
 export default async function SubwaySelect() {
-  const { results } = await fetch('http://localhost:3000/api/data').then(
-    (res) => res.json()
-  );
+  const { results } = await fetch('http://localhost:3000/api/data', {
+    cache: 'no-cache',
+  }).then((res) => res.json());
   if (!results) {
     return <div>데이터베이스에 접속이 불가능한 상태입니다.</div>;
   }
