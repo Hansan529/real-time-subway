@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { SystemError } from '../route';
+import { SystemError } from '@/export/type';
 
 export async function GET(req: NextRequest) {
   const query = req.nextUrl.searchParams;
   const line = query.get('line');
-  console.log('line: ', line);
   try {
     /**
      * 시작한 정류장에서 다음 정류장까지의 소요 시간을 얻는 API 를 통해서 이를 스크립트로 열차의 위치를

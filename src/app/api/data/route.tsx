@@ -1,21 +1,10 @@
 import mysql, { createPool } from 'mysql2/promise';
 import { NextResponse } from 'next/server';
-
-type SystemError = {
-  code: string;
-  message: string;
-};
-
-export const info = {
-  host: 'localhost',
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_DATABASE,
-  socketPath: '/tmp/mysql.sock',
-};
+import { mysqlConnect } from '@/export/db';
+import { SystemError } from '@/export/type';
 
 export async function GET(req: Request) {
-  const dbconnection = await mysql.createConnection(info);
+  const dbconnection = await mysql.createConnection(mysqlConnect);
 
   try {
     const query = 'SELECT * FROM metro';
