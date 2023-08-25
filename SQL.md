@@ -27,3 +27,16 @@ INSERT INTO metro(name, hex, path) VALUES('신분당선', '#BA0C2F', '신사 - �
 INSERT INTO metro(name, hex, path) VALUES('경강선', '#0066FF', '여주 - 판교');
 INSERT INTO metro(name, hex, path) VALUES('신림선', '#558BCF', '지원하지 않음');
 ```
+
+```sql
+CREATE TABLE line_info(
+    TOTAL_COUNT int not null,
+    STATION_CD varchar(10) not null,
+    STATION_NM varchar(100) not null,
+    STATION_NM_ENG varchar(100) not null,
+    LINE_NUM varchar(50) not null,
+    FR_CODE varchar(20) not null UNIQUE KEY,
+    STATION_NM_CHN varchar(100) not null,
+    STATION_NM_JPN varchar(100) not null,
+)
+```
