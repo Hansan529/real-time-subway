@@ -1,21 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
 import { SystemError } from '@/export/type';
+import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(req: NextRequest) {
-  const query = req.nextUrl.searchParams;
-  const line = query.get('line');
+  const query = req.nextUrl.searchParams.get('station');
   try {
-    /**
-     * 시작한 정류장에서 다음 정류장까지의 소요 시간을 얻는 API 를 통해서 이를 스크립트로 열차의 위치를
-     * 별도의 API 요청 없이 이동되도록?
-     *
-     * 혹은 10초마다 계속 API 요청으로 위치를 갱신?
-     */
-    const { errorMessage, realtimePositionList } = await fetch(
-      `${process.env.SEOUL_METRO_POSITION_API}/${line}`,
-      {
-        cache: 'no-cache',
-      }
+    const { errorMessage, realtimeArrivalList } = await fetch(
+      `${process.env.SEOUL_METRO_STATION_ARRIVAL}/${query}`
     ).then((res) => res.json());
     // * 에러 상태 체크
     switch (errorMessage.code) {
@@ -61,7 +51,7 @@ export async function GET(req: NextRequest) {
           { status: 404 }
         );
     }
-    return NextResponse.json(realtimePositionList);
+    return NextResponse.json(realtimeArrivalList);
   } catch (error) {
     const err = error as SystemError;
     console.log('API 요청에 실패했습니다.', err);
