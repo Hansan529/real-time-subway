@@ -63,12 +63,14 @@ export async function GET(req: NextRequest) {
         );
     }
 
-    const stationNameChange = '응암(하선-종착)';
-    const updateItem = realtimePositionList.map((item: SubwayPosition) =>
-      item.statnTnm === '응암(하선-종착)' ? { ...item, statnTnm: '응암' } : item
-    );
-    // const arrayInvert = line6Change.map(item => ({}))
-
+    /** 역 정보 괄호 제거 */
+    const updateItem = realtimePositionList.map((item: SubwayPosition) => {
+      return {
+        ...item,
+        statnNm: item.statnNm.replace(/\([^)]*\)/, ''),
+        statnTnm: item.statnTnm.replace(/\([^)]*\)/, ''),
+      };
+    });
     return NextResponse.json(updateItem);
   } catch (error) {
     const err = error as SystemError;
