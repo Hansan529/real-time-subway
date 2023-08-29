@@ -28,9 +28,9 @@ export const colorDynamic: ColorList = {
 };
 
 class Metro {
-  color(name: string, path: string, key: any) {
+  color(name: string, path: string, key: any, direct?: number) {
     return (
-      <Link key={key} href={`/${name}`}>
+      <Link key={key} href={`/${name}${direct !== 0 ? `/direct` : ''}`}>
         <div
           className={`overflow-hidden shadow-xl p-5 rounded-xl border-b-[10px] ${colorDynamic[name]}`}
           style={{ backgroundSize: '100%, 50px' }}
@@ -59,7 +59,8 @@ export default async function SubwaySelect() {
           return metroList.color(
             Object.values(el)[1],
             Object.values(el)[3],
-            index
+            index,
+            Number(Object.values(el)[4])
           );
         })}
       </div>
