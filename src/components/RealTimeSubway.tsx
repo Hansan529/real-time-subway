@@ -34,6 +34,7 @@ export interface SubwayPosition {
   directAt: string;
   /** 막차여부 1:막차, 0:아님 */
   lstcarAt: string;
+  message?: string;
 }
 
 interface ArrivalStatus {
@@ -105,7 +106,6 @@ export default function RealTimeSubway({ props }: { props: string[] }) {
         next: { revalidate: 10 },
       }
     ).then((res) => res.json());
-    if (res.message) return <div>{res.message}</div>;
     setPos(res);
     setLoading(false);
   };
@@ -133,9 +133,20 @@ export default function RealTimeSubway({ props }: { props: string[] }) {
   const ArrivalInformation = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     const data = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/train-arrival?station=${e.currentTarget.value}`
+      `${process.env.NEXT_PUBLIC_API_URL}/train-arrival?station=${e.currentTarget.value}`,
+      { cache: 'no-cache', next: { revalidate: 15 } }
     ).then((res) => res.json());
-    setArrival(data);
+    // setArrival(data);
+    const upLine = data.filter(
+      (sel: ArrivalStatus) =>
+        sel.updnLine === '상행' && sel.subwayId === pos[0].subwayId
+    );
+    const downLine = data.filter(
+      (sel: ArrivalStatus) =>
+        sel.updnLine === '하행' && sel.subwayId === pos[0].subwayId
+    );
+    console.log('test', upLine);
+    setArrival([upLine.flat(), downLine.flat()]);
   };
 
   /** 역 정보 */
@@ -144,10 +155,11 @@ export default function RealTimeSubway({ props }: { props: string[] }) {
     const stationTrain: SubwayPosition[] = pos.filter(
       (item) => item.statnNm === station.STATION_NM
     );
-    console.log('stationTrain: ', stationTrain);
 
     /** 상행선 함수 */
-    const upLine = stationTrain.find((el) => el.updnLine === '0');
+    const upLine = stationTrain.find(
+      (el) => el.updnLine === '0' && el.directAt === '0'
+    );
     /** 상행선 급행 함수 */
     const upDirect = stationTrain.find(
       (el) => el.updnLine === '0' && el.directAt === '1'
@@ -160,8 +172,6 @@ export default function RealTimeSubway({ props }: { props: string[] }) {
     const downDirect = stationTrain.find(
       (el) => el.updnLine === '1' && el.directAt === '1'
     );
-
-    // 응암(하선-종착)"
 
     return (
       <div
@@ -234,7 +244,29 @@ export default function RealTimeSubway({ props }: { props: string[] }) {
 
   return (
     <article className="divide-y-2 [&>div]:p-3">
-      {loading ? null : <>{stationInfo}</>}
+      {loading ? null : (
+        <>
+          {stationInfo}
+          {pos[0].message ? (
+            <div className="fixed -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2 border-none">
+              {pos[0].message}
+            </div>
+          ) : null}
+          {arrival.length !== 0 ? (
+            <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+              <span></span>
+              {arrival[0].map((item, key) => (
+                <p key={key}>
+                  {Math.floor(item.barvlDt / 60) > 0
+                    ? Math.floor(item.barvlDt / 60) + '분'
+                    : ''}{' '}
+                  {item.barvlDt % 60}초
+                </p>
+              ))}
+            </div>
+          ) : null}
+        </>
+      )}
     </article>
   );
 }
