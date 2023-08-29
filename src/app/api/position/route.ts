@@ -12,12 +12,18 @@ export async function GET(req: NextRequest) {
      *
      * 혹은 10초마다 계속 API 요청으로 위치를 갱신?
      */
-    const { errorMessage, realtimePositionList } = await fetch(
+    const { errorMessage, realtimePositionList, message } = await fetch(
       `${process.env.SEOUL_METRO_POSITION_API}/${line}`,
       {
         cache: 'no-cache',
       }
     ).then((res) => res.json());
+    if (message)
+      return NextResponse.json([
+        {
+          message: '현재 열차 정보가 없습니다. 운행이 종료되었는지 확인하세요.',
+        },
+      ]);
     // * 에러 상태 체크
     switch (errorMessage.code) {
       case 'INFO-000':
