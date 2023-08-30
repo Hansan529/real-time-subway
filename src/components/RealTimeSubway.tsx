@@ -1,6 +1,7 @@
 'use client';
 
 import { Station } from '@/app/api/line-info/route';
+import { branchLine } from '@/export/branchLine';
 import { useEffect, useState } from 'react';
 
 // ^ 타입
@@ -124,6 +125,25 @@ export default function RealTimeSubway({ props }: { props: string[] }) {
     }
   };
 
+  /** 구간별로 나누어져있는 호선들의 방향을 나누기 위해 사용하는 함수 */
+  const dynamicLine = (stationItem: Station) => {
+    for (const branch of branchLine) {
+      const [key, ...value] = branch;
+      const line = key.line;
+
+      // 라인이 일치하는지 체크
+      if (stationItem.LINE_NUM === line) {
+        for (const obj of value) {
+          const [startStation, endStation] = Object.entries(obj)[0];
+
+          if (stationItem.STATION_NM === startStation)
+            return ['text-sky-500', `${startStation} - ${endStation}`];
+        }
+      }
+    }
+    return '';
+  };
+
   useEffect(() => {
     getLineInfo();
     getPosition();
@@ -145,8 +165,7 @@ export default function RealTimeSubway({ props }: { props: string[] }) {
       (sel: ArrivalStatus) =>
         sel.updnLine === '하행' && sel.subwayId === pos[0].subwayId
     );
-    console.log('test', upLine);
-    setArrival([upLine.flat(), downLine.flat()]);
+    setArrival([upLine, downLine]);
   };
 
   /** 역 정보 */
@@ -174,71 +193,92 @@ export default function RealTimeSubway({ props }: { props: string[] }) {
     );
 
     return (
-      <div
-        className={`${station.STATION_NM} text-center flex items-center gap-5 justify-end min-h-[100px]`}
-        key={key}
-      >
-        <div className="flex justify-between w-full">
-          <div className="order-1 flex-1">
-            {downLine ? (
+      <>
+        {dynamicLine(station) !== '' ? (
+          <div className={`${dynamicLine(station)[0]}`}>
+            {dynamicLine(station)[1]}
+          </div>
+        ) : null}
+        <div
+          id={`${station.STATION_NM}`}
+          className={`text-center flex items-center gap-5 justify-end min-h-[100px]`}
+        >
+          <div className="flex justify-between w-full">
+            <div className="order-1 flex-1">
+              {downLine ? (
+                <>
+                  <p>
+                    {downLine?.subwayNm !== '서해선'
+                      ? downLine.statnTnm
+                      : '원시'}
+                  </p>
+                  <p>{downLine.trainNo}</p>
+                  <p>{subwayStatus(downLine.trainSttus)}</p>
+                  {downLine.lstcarAt === '1' ? <p>막차</p> : null}
+                </>
+              ) : null}
+            </div>
+            {/** 급행 열차 */}
+            {props.length > 1 ? (
               <>
-                <p>{downLine.statnTnm}</p>
-                <p>{downLine.trainNo}</p>
-                <p>{subwayStatus(downLine.trainSttus)}</p>
-                {downLine.lstcarAt === '1' ? <p>막차</p> : null}
+                <div className="order-2 flex-1">
+                  {downDirect ? (
+                    <>
+                      <p>
+                        {downDirect?.subwayNm !== '서해선'
+                          ? downDirect.statnTnm
+                          : '원시'}
+                      </p>
+                      <p>{downDirect.trainNo}</p>
+                      <p>{subwayStatus(downDirect.trainSttus)}</p>
+                      <p>급행</p>
+                      {downDirect.lstcarAt === '1' ? <p>막차</p> : null}
+                    </>
+                  ) : null}
+                </div>
+                <div className="order-3 flex-1">
+                  {upDirect ? (
+                    <>
+                      <p>
+                        {upDirect?.subwayNm !== '서해선'
+                          ? upDirect.statnTnm
+                          : '대곡'}
+                      </p>
+                      <p>{upDirect.trainNo}</p>
+                      <p>{subwayStatus(upDirect.trainSttus)}</p>
+                      <p>급행</p>
+                      {upDirect.lstcarAt === '1' ? <p>막차</p> : null}
+                    </>
+                  ) : null}
+                </div>
               </>
             ) : null}
+            <div className="order-4 flex-1">
+              {upLine ? (
+                <>
+                  <p>
+                    {upLine?.subwayNm !== '서해선' ? upLine.statnTnm : '일산'}
+                  </p>
+                  <p>{upLine.trainNo}</p>
+                  <p>{subwayStatus(upLine.trainSttus)}</p>
+                  {upLine.lstcarAt === '1' ? <p>막차</p> : null}
+                </>
+              ) : null}
+            </div>
           </div>
-          {/** 급행 열차 */}
-          {props.length > 1 ? (
-            <>
-              <div className="order-2 flex-1">
-                {downDirect ? (
-                  <>
-                    <p>{downDirect.statnTnm}</p>
-                    <p>{downDirect.trainNo}</p>
-                    <p>{subwayStatus(downDirect.trainSttus)}</p>
-                    <p>급행</p>
-                    {downDirect.lstcarAt === '1' ? <p>막차</p> : null}
-                  </>
-                ) : null}
-              </div>
-              <div className="order-3 flex-1">
-                {upDirect ? (
-                  <>
-                    <p>{upDirect.statnTnm}</p>
-                    <p>{upDirect.trainNo}</p>
-                    <p>{subwayStatus(upDirect.trainSttus)}</p>
-                    <p>급행</p>
-                    {upDirect.lstcarAt === '1' ? <p>막차</p> : null}
-                  </>
-                ) : null}
-              </div>
-            </>
-          ) : null}
-          <div className="order-4 flex-1">
-            {upLine ? (
-              <>
-                <p>{upLine.statnTnm}</p>
-                <p>{upLine.trainNo}</p>
-                <p>{subwayStatus(upLine.trainSttus)}</p>
-                {upLine.lstcarAt === '1' ? <p>막차</p> : null}
-              </>
-            ) : null}
+          <div className="order-last min-w-[130px]">
+            <button onClick={ArrivalInformation} value={station.STATION_NM}>
+              {station.STATION_NM}
+            </button>
           </div>
+          {/* 특정 역 선택 */}
+          {/* {arrival ? (
+            <div>
+              <p>{arrival.map((station, index) => station.barvlDt)}</p>
+            </div>
+          ) : null} */}
         </div>
-        <div className="order-last min-w-[130px]">
-          <button onClick={ArrivalInformation} value={station.STATION_NM}>
-            {station.STATION_NM}
-          </button>
-        </div>
-        {/* 특정 역 선택 */}
-        {/* {arrival ? (
-          <div>
-            <p>{arrival.map((station, index) => station.barvlDt)}</p>
-          </div>
-        ) : null} */}
-      </div>
+      </>
     );
   });
 
@@ -247,11 +287,6 @@ export default function RealTimeSubway({ props }: { props: string[] }) {
       {loading ? null : (
         <>
           {stationInfo}
-          {pos[0].message ? (
-            <div className="fixed -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2 border-none">
-              {pos[0].message}
-            </div>
-          ) : null}
           {arrival.length !== 0 ? (
             <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
               <span></span>
