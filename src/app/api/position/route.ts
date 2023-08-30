@@ -68,13 +68,13 @@ export async function GET(req: NextRequest) {
           { status: 404 }
         );
     }
-
     /** 역 정보 괄호 제거 */
     const updateItem = realtimePositionList.map((item: SubwayPosition) => {
       return {
         ...item,
         statnNm: item.statnNm.replace(/\([^)]*\)/, ''),
-        statnTnm: item.statnTnm.replace(/\([^)]*\)/, ''),
+        statnTnm:
+          item.statnTnm !== null ? item.statnTnm.replace(/\([^)]*\)/, '') : '',
       };
     });
     return NextResponse.json(updateItem);
