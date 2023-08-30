@@ -66,12 +66,15 @@ export async function GET(req: NextRequest) {
       /** 만약 숫자일 경우, 맨 앞 숫자 제거 (0 제거하기 위한 수식) */
       if (numberChk) lineNum = data.LINE_NUM.slice(1);
 
+      /** 열차가 통근열차밖에 없는 경우 제거 */
+      if (data.STATION_NM === '광명' || data.STATION_NM === '서동탄') return;
+
       await dbconnection.execute(`INSERT INTO line_${lineNum}(TOTAL_COUNT, STATION_CD, STATION_NM, STATION_NM_ENG, LINE_NUM, FR_CODE, STATION_NM_CHN, STATION_NM_JPN, STATION_ORDER)
       SELECT ${res.list_total_count}, "${data.STATION_CD}", "${data.STATION_NM}", "${data.STATION_NM_ENG}", "${lineNum}", "${data.FR_CODE}", "${data.STATION_NM_CHN}", "${data.STATION_NM_JPN}", IFNULL(MAX(STATION_ORDER), 0) + 1 FROM line_${lineNum} ON DUPLICATE KEY UPDATE TOTAL_COUNT = ${res.list_total_count}`);
     });
     // }
     /** 업데이트한 목록을 검색 */
-    const query = `SELECT * FROM line_${line} WHERE line_num = "${line}"`;
+    const query = `SELECT * FROM line_${line} WHERE line_num = "${line}" ORDER BY STATION_ORDER ASC`;
     const [results] = await dbconnection.execute(query, values);
     dbconnection.end();
     return NextResponse.json(results);
