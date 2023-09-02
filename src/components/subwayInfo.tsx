@@ -27,22 +27,19 @@ export const colorDynamic: ColorList = {
     'relative before:absolute before:w-full before:h-full before:top-0 before:left-0 before:block before:bg-gray-500/50 border-b-[#558BCF]',
 };
 
-class Metro {
-  color(name: string, path: string, key: any, direct?: number) {
-    return (
-      <Link key={key} href={`/${name}${direct !== 0 ? `/direct` : ''}`}>
-        <div
-          className={`overflow-hidden shadow-xl p-5 rounded-xl border-b-[10px] ${colorDynamic[name]}`}
-          style={{ backgroundSize: '100%, 50px' }}
-        >
-          <h2>{name}</h2>
-          <span className="text-xs">{path}</span>
-        </div>
-      </Link>
-    );
-  }
-}
-const metroList = new Metro();
+const Metro = (name: string, path: string, key: any, direct?: number) => {
+  return (
+    <Link key={key} href={`/${name}${direct !== 0 ? `/direct` : ''}`}>
+      <div
+        className={`overflow-hidden shadow-xl p-5 rounded-xl border-b-[10px] ${colorDynamic[name]}`}
+        style={{ backgroundSize: '100%, 50px' }}
+      >
+        <h2>{name}</h2>
+        <span className="text-xs">{path}</span>
+      </div>
+    </Link>
+  );
+};
 
 export default async function SubwaySelect() {
   const { results } = await fetch('http://localhost:3000/api/data', {
@@ -56,7 +53,7 @@ export default async function SubwaySelect() {
     <article className="p-5">
       <div className="grid grid-cols-2 gap-5">
         {results.map((el: string[], index: number) => {
-          return metroList.color(
+          return Metro(
             Object.values(el)[1],
             Object.values(el)[3],
             index,
