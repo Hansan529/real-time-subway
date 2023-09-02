@@ -2,7 +2,8 @@
 
 import { Station } from '@/app/api/line-info/route';
 import { branchLine } from '@/export/branchLine';
-import { useEffect, useState } from 'react';
+import { SystemError } from '@/export/type';
+import React, { useEffect, useState } from 'react';
 
 // ^ 타입
 export interface SubwayPosition {
@@ -90,8 +91,8 @@ export default function RealTimeSubway({ props }: { props: string[] }) {
   const [pos, setPos] = useState<SubwayPosition[]>([]);
   const [station, setStation] = useState<Station[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [cal, setCal] = useState(true);
-  const [arrival, setArrival] = useState<ArrivalStatus[]>([]);
+  const [arrival, setArrival] = useState([[]]);
+  const [selectStation, setSelectStation] = useState<string>();
 
   const getLineInfo = async () => {
     const res = await fetch(
@@ -152,24 +153,81 @@ export default function RealTimeSubway({ props }: { props: string[] }) {
   /** 특정 역에서 열차 도착 정보 */
   const ArrivalInformation = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
+    setSelectStation(e.currentTarget.value);
+    const limit = 2;
     const data = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL}/train-arrival?station=${e.currentTarget.value}`,
       { cache: 'no-cache', next: { revalidate: 15 } }
     ).then((res) => res.json());
-    // setArrival(data);
+
+    /** 순서 추출 */
+    function sortNumber(num: string) {
+      console.log('num: ', num);
+      /** 전역 도착일 경우 최우선 순으로 하도록 설정 */
+      if (num === '전역 도착') return 0;
+      else if (num === undefined || null) return;
+      /** [number] 추출하기 위한 정규 표현식 */
+      const match = /\[(\d+)\]/g;
+      const result = match.exec(num) as RegExpExecArray;
+      console.log(
+        'result: ',
+        result,
+        'result[1]',
+        result[1],
+        'parseInt',
+        parseInt(result[1])
+      );
+      /** result가 있을 경우 숫자로 변환 */
+      return result ? parseInt(result[1]) : 0;
+    }
+
+    /** 상행, 하행 도착 열차 Limit 개수만큼 */
     const upLine = data.filter(
       (sel: ArrivalStatus) =>
-        sel.updnLine === '상행' && sel.subwayId === pos[0].subwayId
+        (sel.updnLine === '상행' || sel.updnLine === '내선') &&
+        sel.subwayId === pos[0].subwayId
     );
-    const downLine = data.filter(
-      (sel: ArrivalStatus) =>
-        sel.updnLine === '하행' && sel.subwayId === pos[0].subwayId
-    );
+
+    upLine.map((el: ArrivalStatus) => sortNumber(el.arvlMsg2));
+
+    const downLine = data
+      .filter(
+        (sel: ArrivalStatus) =>
+          (sel.updnLine === '하행' || sel.updnLine === '외선') &&
+          sel.subwayId === pos[0].subwayId
+      )
+      .slice(0, limit);
     setArrival([upLine, downLine]);
   };
 
   /** 역 정보 */
   const stationInfo = station?.map((station, key) => {
+    /** 실시간 지하철 위치를 확인할 수 없는 경우 */
+    if (pos.length === 0) {
+      return (
+        <div key={key}>
+          {dynamicLine(station) !== '' ? (
+            <div className={`${dynamicLine(station)[0]}`}>
+              {dynamicLine(station)[1]}
+            </div>
+          ) : null}
+          <div
+            id={`${station.STATION_NM}`}
+            className={`text-center flex items-center gap-5 justify-end min-h-[100px]`}
+          >
+            <div className="flex justify-between w-full">
+              <div className="order-1 flex-1"></div>
+              <div className="order-2 flex-1"></div>
+              <div className="order-3 flex-1"></div>
+              <div className="order-4 flex-1"></div>
+            </div>
+          </div>
+          <div className="order-last min-w-[130px]">
+            <button value={station.STATION_NM}>{station.STATION_NM}</button>
+          </div>
+        </div>
+      );
+    }
     /** 역 이름과 일치하는 열차 위치 상태 */
     const stationTrain: SubwayPosition[] = pos.filter(
       (item) => item.statnNm === station.STATION_NM
@@ -193,7 +251,7 @@ export default function RealTimeSubway({ props }: { props: string[] }) {
     );
 
     return (
-      <>
+      <div key={key}>
         {dynamicLine(station) !== '' ? (
           <div className={`${dynamicLine(station)[0]}`}>
             {dynamicLine(station)[1]}
@@ -271,14 +329,8 @@ export default function RealTimeSubway({ props }: { props: string[] }) {
               {station.STATION_NM}
             </button>
           </div>
-          {/* 특정 역 선택 */}
-          {/* {arrival ? (
-            <div>
-              <p>{arrival.map((station, index) => station.barvlDt)}</p>
-            </div>
-          ) : null} */}
         </div>
-      </>
+      </div>
     );
   });
 
@@ -289,15 +341,59 @@ export default function RealTimeSubway({ props }: { props: string[] }) {
           {stationInfo}
           {arrival.length !== 0 ? (
             <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-              <span></span>
-              {arrival[0].map((item, key) => (
-                <p key={key}>
-                  {Math.floor(item.barvlDt / 60) > 0
-                    ? Math.floor(item.barvlDt / 60) + '분'
-                    : ''}{' '}
-                  {item.barvlDt % 60}초
-                </p>
-              ))}
+              <span>{selectStation}</span>
+              <div className="flex gap-10 mb-10">
+                {arrival[0].map((item: ArrivalStatus, key: number) => (
+                  <div key={key}>
+                    <p>{item.updnLine}</p>
+                    {/* 열차 위치 */}
+                    <p>{item.arvlMsg3}</p>
+                    {/* n번째 역 */}
+                    <p>{item.arvlMsg2}</p>
+                    {/* 차량 번호 */}
+                    <p>{item.btrainNo}</p>
+                    {/* 차량 도착 예정 시간 */}
+                    <p>{item.barvlDt}s</p>
+                    {Math.floor(Number(item.barvlDt) / 60) > 0 ? (
+                      <>
+                        <span>
+                          {Math.floor(Number(item.barvlDt) / 60)}분{' '}
+                          {Number(item.barvlDt) % 60}
+                        </span>
+                        <span>초</span>
+                      </>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+              <div className="flex gap-10">
+                {arrival[1] ? (
+                  arrival[1].map((item: ArrivalStatus, key: number) => (
+                    <div key={key}>
+                      <p>{item.updnLine}</p>
+                      {/* 열차 위치 */}
+                      <p>{item.arvlMsg3}</p>
+                      {/* n번째 역 */}
+                      <p>{item.arvlMsg2}</p>
+                      {/* 차량 번호 */}
+                      <p>{item.btrainNo}</p>
+                      {/* 차량 도착 예정 시간 */}
+                      <p>{item.barvlDt}s</p>
+                      {Math.floor(Number(item.barvlDt) / 60) > 0 ? (
+                        <>
+                          <span>
+                            {Math.floor(Number(item.barvlDt) / 60)}분{' '}
+                            {Number(item.barvlDt) % 60}
+                          </span>
+                          <span>초</span>
+                        </>
+                      ) : null}
+                    </div>
+                  ))
+                ) : (
+                  <div>하행 도착 정보가 없습니다.</div>
+                )}
+              </div>
             </div>
           ) : null}
         </>
