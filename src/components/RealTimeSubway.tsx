@@ -188,7 +188,14 @@ export default function RealTimeSubway({ props }: { props: string[] }) {
         sel.subwayId === pos[0].subwayId
     );
 
-    upLine.map((el: ArrivalStatus) => sortNumber(el.arvlMsg2));
+    const orderUpLine = upLine
+      .map((el: ArrivalStatus) => {
+        return {
+          ...el,
+          order: sortNumber(el.arvlMsg2),
+        };
+      })
+      .sort((a: { order: number }, b: { order: number }) => a.order - b.order);
 
     const downLine = data
       .filter(
@@ -197,8 +204,19 @@ export default function RealTimeSubway({ props }: { props: string[] }) {
           sel.subwayId === pos[0].subwayId
       )
       .slice(0, limit);
-    setArrival([upLine, downLine]);
+
+    const orderDownLine = downLine
+      .map((el: ArrivalStatus) => {
+        return {
+          ...el,
+          order: sortNumber(el.arvlMsg2),
+        };
+      })
+      .sort((a: { order: number }, b: { order: number }) => a.order - b.order);
+
+    setArrival([orderUpLine, orderDownLine]);
   };
+
 
   /** 역 정보 */
   const stationInfo = station?.map((station, key) => {
