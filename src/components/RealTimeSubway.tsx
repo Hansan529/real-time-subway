@@ -203,39 +203,30 @@ export default function RealTimeSubway({ props }: { props: string[] }) {
     }
 
     /** 상행, 하행 도착 열차 Limit 개수만큼 */
-    const upLine = data.filter(
-      (sel: ArrivalStatus) =>
-        (sel.updnLine === '상행' || sel.updnLine === '내선') &&
-        sel.subwayId === pos[0].subwayId
-    );
+    const filter = (updn: string) => {
+      return (
+        data
+          .filter(
+            (sel: ArrivalStatus) =>
+              (sel.updnLine === updn ||
+                sel.updnLine === (updn === '상행' ? '내선' : '외선')) &&
+              sel.subwayId === pos[0].subwayId
+          )
+          /** 도착 순서 정렬 */
+          .map((el: ArrivalStatus) => {
+            return {
+              ...el,
+              order: sortNumber(el.arvlMsg2),
+            };
+          })
+          .sort(
+            (a: { order: number }, b: { order: number }) => a.order - b.order
+          )
+          .slice(0, limit)
+      );
+    };
 
-    const orderUpLine = upLine
-      .map((el: ArrivalStatus) => {
-        return {
-          ...el,
-          order: sortNumber(el.arvlMsg2),
-        };
-      })
-      .sort((a: { order: number }, b: { order: number }) => a.order - b.order)
-      .slice(0, limit);
-
-    const downLine = data.filter(
-      (sel: ArrivalStatus) =>
-        (sel.updnLine === '하행' || sel.updnLine === '외선') &&
-        sel.subwayId === pos[0].subwayId
-    );
-
-    const orderDownLine = downLine
-      .map((el: ArrivalStatus) => {
-        return {
-          ...el,
-          order: sortNumber(el.arvlMsg2),
-        };
-      })
-      .sort((a: { order: number }, b: { order: number }) => a.order - b.order)
-      .slice(0, limit);
-
-    setArrival([orderUpLine, orderDownLine]);
+    setArrival([filter('상행'), filter('하행')]);
   };
 
   /** 역 정보 */
@@ -392,7 +383,6 @@ export default function RealTimeSubway({ props }: { props: string[] }) {
                       {/* 차량 번호 */}
                       <p>{item.btrainNo}</p>
                       {/* 차량 도착 예정 시간 */}
-                      <p>{item.barvlDt}s</p>
                       {Math.floor(Number(item.barvlDt) / 60) > 0 ? (
                         <>
                           <span>
@@ -401,7 +391,11 @@ export default function RealTimeSubway({ props }: { props: string[] }) {
                           </span>
                           <span>초</span>
                         </>
-                      ) : null}
+                      ) : item.barvlDt !== '0' ? (
+                        <span>{item.barvlDt}초</span>
+                      ) : (
+                        <span className="text-gray-500">정보 없음</span>
+                      )}
                       <p>{item.btrainSttus}</p>
                     </div>
                   ))
@@ -421,7 +415,6 @@ export default function RealTimeSubway({ props }: { props: string[] }) {
                       {/* 차량 번호 */}
                       <p>{item.btrainNo}</p>
                       {/* 차량 도착 예정 시간 */}
-                      <p>{item.barvlDt}s</p>
                       {Math.floor(Number(item.barvlDt) / 60) > 0 ? (
                         <>
                           <span>
@@ -430,7 +423,11 @@ export default function RealTimeSubway({ props }: { props: string[] }) {
                           </span>
                           <span>초</span>
                         </>
-                      ) : null}
+                      ) : item.barvlDt !== '0' ? (
+                        <span>{item.barvlDt}초</span>
+                      ) : (
+                        <span className="text-gray-500">정보 없음</span>
+                      )}
                       <p>{item.btrainSttus}</p>
                     </div>
                   ))
