@@ -29,6 +29,7 @@ export async function GET(req: NextRequest) {
       break;
     case '경의중앙선':
       line = '경의선';
+      break;
     case '2호선':
       line = '02호선';
       break;
