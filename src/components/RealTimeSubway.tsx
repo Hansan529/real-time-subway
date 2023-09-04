@@ -153,30 +153,51 @@ export default function RealTimeSubway({ props }: { props: string[] }) {
   /** 특정 역에서 열차 도착 정보 */
   const ArrivalInformation = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    setSelectStation(e.currentTarget.value);
+
+    /** 서울시 지하철 실시간 도착정보 API의 요청 역이 다름으로 인해서
+     * 일부 역 요청코드의 변경으로 인해 이와 같은 코드 수정 작업이 사용되었음
+     */
+    let station = e.currentTarget.value;
+    switch (station) {
+      case '서울역':
+        station = '서울';
+        break;
+      case '응암':
+        station = '응암순환(상선)';
+        break;
+      case '공릉':
+        station = '공릉(서울산업대입구)';
+        break;
+      case '남한산성입구':
+        station = '남한산성입구(성남법원, 검찰청)';
+        break;
+      case '대모산입구':
+        station = '대모산';
+        break;
+      case '천호':
+        station = '천호(풍납토성)';
+        break;
+      case '몽촌토성':
+        station = '몽촌토성(평화의문)';
+        break;
+      default:
+        break;
+    }
+    setSelectStation(station);
     const limit = 2;
     const data = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/train-arrival?station=${e.currentTarget.value}`,
+      `${process.env.NEXT_PUBLIC_API_URL}/train-arrival?station=${station}`,
       { cache: 'no-cache', next: { revalidate: 15 } }
     ).then((res) => res.json());
 
     /** 순서 추출 */
     function sortNumber(num: string) {
-      console.log('num: ', num);
       /** 전역 도착일 경우 최우선 순으로 하도록 설정 */
-      if (num === '전역 도착') return 0;
+      if (num === '전역 도착' || num.match('진입')) return 0;
       else if (num === undefined || null) return;
       /** [number] 추출하기 위한 정규 표현식 */
       const match = /\[(\d+)\]/g;
       const result = match.exec(num) as RegExpExecArray;
-      console.log(
-        'result: ',
-        result,
-        'result[1]',
-        result[1],
-        'parseInt',
-        parseInt(result[1])
-      );
       /** result가 있을 경우 숫자로 변환 */
       return result ? parseInt(result[1]) : 0;
     }
@@ -195,15 +216,14 @@ export default function RealTimeSubway({ props }: { props: string[] }) {
           order: sortNumber(el.arvlMsg2),
         };
       })
-      .sort((a: { order: number }, b: { order: number }) => a.order - b.order);
-
-    const downLine = data
-      .filter(
-        (sel: ArrivalStatus) =>
-          (sel.updnLine === '하행' || sel.updnLine === '외선') &&
-          sel.subwayId === pos[0].subwayId
-      )
+      .sort((a: { order: number }, b: { order: number }) => a.order - b.order)
       .slice(0, limit);
+
+    const downLine = data.filter(
+      (sel: ArrivalStatus) =>
+        (sel.updnLine === '하행' || sel.updnLine === '외선') &&
+        sel.subwayId === pos[0].subwayId
+    );
 
     const orderDownLine = downLine
       .map((el: ArrivalStatus) => {
@@ -212,11 +232,11 @@ export default function RealTimeSubway({ props }: { props: string[] }) {
           order: sortNumber(el.arvlMsg2),
         };
       })
-      .sort((a: { order: number }, b: { order: number }) => a.order - b.order);
+      .sort((a: { order: number }, b: { order: number }) => a.order - b.order)
+      .slice(0, limit);
 
     setArrival([orderUpLine, orderDownLine]);
   };
-
 
   /** 역 정보 */
   const stationInfo = station?.map((station, key) => {
@@ -358,31 +378,36 @@ export default function RealTimeSubway({ props }: { props: string[] }) {
         <>
           {stationInfo}
           {arrival.length !== 0 ? (
-            <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+            <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black text-white">
               <span>{selectStation}</span>
               <div className="flex gap-10 mb-10">
-                {arrival[0].map((item: ArrivalStatus, key: number) => (
-                  <div key={key}>
-                    <p>{item.updnLine}</p>
-                    {/* 열차 위치 */}
-                    <p>{item.arvlMsg3}</p>
-                    {/* n번째 역 */}
-                    <p>{item.arvlMsg2}</p>
-                    {/* 차량 번호 */}
-                    <p>{item.btrainNo}</p>
-                    {/* 차량 도착 예정 시간 */}
-                    <p>{item.barvlDt}s</p>
-                    {Math.floor(Number(item.barvlDt) / 60) > 0 ? (
-                      <>
-                        <span>
-                          {Math.floor(Number(item.barvlDt) / 60)}분{' '}
-                          {Number(item.barvlDt) % 60}
-                        </span>
-                        <span>초</span>
-                      </>
-                    ) : null}
-                  </div>
-                ))}
+                {arrival[0] ? (
+                  arrival[0].map((item: ArrivalStatus, key: number) => (
+                    <div key={key}>
+                      <p>{item.updnLine}</p>
+                      {/* 열차 위치 */}
+                      <p>{item.arvlMsg3}</p>
+                      {/* n번째 역 */}
+                      <p>{item.arvlMsg2}</p>
+                      {/* 차량 번호 */}
+                      <p>{item.btrainNo}</p>
+                      {/* 차량 도착 예정 시간 */}
+                      <p>{item.barvlDt}s</p>
+                      {Math.floor(Number(item.barvlDt) / 60) > 0 ? (
+                        <>
+                          <span>
+                            {Math.floor(Number(item.barvlDt) / 60)}분{' '}
+                            {Number(item.barvlDt) % 60}
+                          </span>
+                          <span>초</span>
+                        </>
+                      ) : null}
+                      <p>{item.btrainSttus}</p>
+                    </div>
+                  ))
+                ) : (
+                  <div>상행 도착 정보가 없습니다.</div>
+                )}
               </div>
               <div className="flex gap-10">
                 {arrival[1] ? (
@@ -406,6 +431,7 @@ export default function RealTimeSubway({ props }: { props: string[] }) {
                           <span>초</span>
                         </>
                       ) : null}
+                      <p>{item.btrainSttus}</p>
                     </div>
                   ))
                 ) : (
