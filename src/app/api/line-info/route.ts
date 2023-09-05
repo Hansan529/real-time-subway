@@ -1,24 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import type { SystemError } from '@/export/type';
+import type { Station, SystemError } from '@/export/type';
 import mysql from 'mysql2/promise';
 import { mysqlConnect } from '@/export/db';
-
-export interface Station {
-  /** 역 코드 */
-  STATION_CD: string;
-  /** 역명 */
-  STATION_NM: string;
-  /** 영문 역명 */
-  STATION_NM_ENG: string;
-  /** 호선 */
-  LINE_NUM: string;
-  /** 외부 코드 */
-  FR_CODE: string;
-  /** 중문 역명 */
-  STATION_NM_CHN: string;
-  /** 일문 역명 */
-  STATION_NM_JPN: string;
-}
 
 export async function GET(req: NextRequest) {
   let line: string = req.nextUrl.searchParams.get('line')?.trim() as string;

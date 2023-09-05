@@ -1,8 +1,7 @@
 'use client';
 
-import { Station } from '@/app/api/line-info/route';
 import { branchLine } from '@/export/branchLine';
-import { SystemError } from '@/export/type';
+import { SystemError, Station } from '@/export/type';
 import React, { useEffect, useState } from 'react';
 
 // ^ 타입
@@ -231,53 +230,33 @@ export default function RealTimeSubway({ props }: { props: string[] }) {
 
   /** 역 정보 */
   const stationInfo = station?.map((station, key) => {
-    /** 실시간 지하철 위치를 확인할 수 없는 경우 */
-    if (pos.length === 0) {
-      return (
-        <div key={key}>
-          {dynamicLine(station) !== '' ? (
-            <div className={`${dynamicLine(station)[0]}`}>
-              {dynamicLine(station)[1]}
-            </div>
-          ) : null}
-          <div
-            id={`${station.STATION_NM}`}
-            className={`text-center flex items-center gap-5 justify-end min-h-[100px]`}
-          >
-            <div className="flex justify-between w-full">
-              <div className="order-1 flex-1"></div>
-              <div className="order-2 flex-1"></div>
-              <div className="order-3 flex-1"></div>
-              <div className="order-4 flex-1"></div>
-            </div>
-          </div>
-          <div className="order-last min-w-[130px]">
-            <button value={station.STATION_NM}>{station.STATION_NM}</button>
-          </div>
-        </div>
+    let stationTrain: SubwayPosition[];
+    let upLine;
+    let upDirect;
+    let downLine;
+    let downDirect;
+
+    if (pos.length !== 0) {
+      /** 역 이름과 일치하는 열차 위치 상태 */
+      stationTrain = pos.filter((item) => item.statnNm === station.STATION_NM);
+
+      /** 상행선 함수 */
+      upLine = stationTrain.find(
+        (el) => el.updnLine === '0' && el.directAt === '0'
+      );
+      /** 상행선 급행 함수 */
+      upDirect = stationTrain.find(
+        (el) => el.updnLine === '0' && el.directAt === '1'
+      );
+      /** 하행선 함수 */
+      downLine = stationTrain.find(
+        (el) => el.updnLine === '1' && el.directAt === '0'
+      );
+      /** 하행선 급행 함수 */
+      downDirect = stationTrain.find(
+        (el) => el.updnLine === '1' && el.directAt === '1'
       );
     }
-    /** 역 이름과 일치하는 열차 위치 상태 */
-    const stationTrain: SubwayPosition[] = pos.filter(
-      (item) => item.statnNm === station.STATION_NM
-    );
-
-    /** 상행선 함수 */
-    const upLine = stationTrain.find(
-      (el) => el.updnLine === '0' && el.directAt === '0'
-    );
-    /** 상행선 급행 함수 */
-    const upDirect = stationTrain.find(
-      (el) => el.updnLine === '0' && el.directAt === '1'
-    );
-    /** 하행선 함수 */
-    const downLine = stationTrain.find(
-      (el) => el.updnLine === '1' && el.directAt === '0'
-    );
-    /** 하행선 급행 함수 */
-    const downDirect = stationTrain.find(
-      (el) => el.updnLine === '1' && el.directAt === '1'
-    );
 
     return (
       <div key={key}>
@@ -294,11 +273,7 @@ export default function RealTimeSubway({ props }: { props: string[] }) {
             <div className="order-1 flex-1">
               {downLine ? (
                 <>
-                  <p>
-                    {downLine?.subwayNm !== '서해선'
-                      ? downLine.statnTnm
-                      : '원시'}
-                  </p>
+                  <p>{downLine.statnTnm}</p>
                   <p>{downLine.trainNo}</p>
                   <p>{subwayStatus(downLine.trainSttus)}</p>
                   {downLine.lstcarAt === '1' ? <p>막차</p> : null}
@@ -311,11 +286,7 @@ export default function RealTimeSubway({ props }: { props: string[] }) {
                 <div className="order-2 flex-1">
                   {downDirect ? (
                     <>
-                      <p>
-                        {downDirect?.subwayNm !== '서해선'
-                          ? downDirect.statnTnm
-                          : '원시'}
-                      </p>
+                      <p>{downDirect.statnTnm}</p>
                       <p>{downDirect.trainNo}</p>
                       <p>{subwayStatus(downDirect.trainSttus)}</p>
                       <p>급행</p>
@@ -326,11 +297,7 @@ export default function RealTimeSubway({ props }: { props: string[] }) {
                 <div className="order-3 flex-1">
                   {upDirect ? (
                     <>
-                      <p>
-                        {upDirect?.subwayNm !== '서해선'
-                          ? upDirect.statnTnm
-                          : '대곡'}
-                      </p>
+                      <p>{upDirect.statnTnm}</p>
                       <p>{upDirect.trainNo}</p>
                       <p>{subwayStatus(upDirect.trainSttus)}</p>
                       <p>급행</p>
@@ -343,9 +310,7 @@ export default function RealTimeSubway({ props }: { props: string[] }) {
             <div className="order-4 flex-1">
               {upLine ? (
                 <>
-                  <p>
-                    {upLine?.subwayNm !== '서해선' ? upLine.statnTnm : '일산'}
-                  </p>
+                  <p>{upLine.statnTnm}</p>
                   <p>{upLine.trainNo}</p>
                   <p>{subwayStatus(upLine.trainSttus)}</p>
                   {upLine.lstcarAt === '1' ? <p>막차</p> : null}
@@ -357,6 +322,7 @@ export default function RealTimeSubway({ props }: { props: string[] }) {
             <button onClick={ArrivalInformation} value={station.STATION_NM}>
               {station.STATION_NM}
             </button>
+            {station.INTERCHANGE ? <p>환승</p> : null}
           </div>
         </div>
       </div>
