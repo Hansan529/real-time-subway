@@ -276,7 +276,7 @@ export default function RealTimeSubway({ props }: { props: string[] }) {
                   <p>{downLine.statnTnm}</p>
                   <p>{downLine.trainNo}</p>
                   <p>{subwayStatus(downLine.trainSttus)}</p>
-                  {downLine.lstcarAt === '1' ? <p>막차</p> : null}
+                  {Boolean(downLine.lstcarAt) ? <p>막차</p> : <div></div>}
                 </>
               ) : null}
             </div>
@@ -290,7 +290,7 @@ export default function RealTimeSubway({ props }: { props: string[] }) {
                       <p>{downDirect.trainNo}</p>
                       <p>{subwayStatus(downDirect.trainSttus)}</p>
                       <p>급행</p>
-                      {downDirect.lstcarAt === '1' ? <p>막차</p> : null}
+                      {Boolean(downDirect.lstcarAt) ? <p>막차</p> : null}
                     </>
                   ) : null}
                 </div>
@@ -301,7 +301,7 @@ export default function RealTimeSubway({ props }: { props: string[] }) {
                       <p>{upDirect.trainNo}</p>
                       <p>{subwayStatus(upDirect.trainSttus)}</p>
                       <p>급행</p>
-                      {upDirect.lstcarAt === '1' ? <p>막차</p> : null}
+                      {Boolean(upDirect.lstcarAt) ? <p>막차</p> : null}
                     </>
                   ) : null}
                 </div>
@@ -313,7 +313,7 @@ export default function RealTimeSubway({ props }: { props: string[] }) {
                   <p>{upLine.statnTnm}</p>
                   <p>{upLine.trainNo}</p>
                   <p>{subwayStatus(upLine.trainSttus)}</p>
-                  {upLine.lstcarAt === '1' ? <p>막차</p> : null}
+                  {Boolean(upLine.lstcarAt) ? <p>막차</p> : null}
                 </>
               ) : null}
             </div>
