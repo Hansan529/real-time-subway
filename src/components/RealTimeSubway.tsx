@@ -276,7 +276,7 @@ export default function RealTimeSubway({ props }: { props: string[] }) {
                   <p>{downLine.statnTnm}</p>
                   <p>{downLine.trainNo}</p>
                   <p>{subwayStatus(downLine.trainSttus)}</p>
-                  {Boolean(downLine.lstcarAt) ? <p>막차</p> : <div></div>}
+                  {Boolean(downLine.lstcarAt) ? null : <p>막차</p>}
                 </>
               ) : null}
             </div>
@@ -290,7 +290,7 @@ export default function RealTimeSubway({ props }: { props: string[] }) {
                       <p>{downDirect.trainNo}</p>
                       <p>{subwayStatus(downDirect.trainSttus)}</p>
                       <p>급행</p>
-                      {Boolean(downDirect.lstcarAt) ? <p>막차</p> : null}
+                      {Boolean(downDirect.lstcarAt) ? null : <p>막차</p>}
                     </>
                   ) : null}
                 </div>
@@ -301,7 +301,7 @@ export default function RealTimeSubway({ props }: { props: string[] }) {
                       <p>{upDirect.trainNo}</p>
                       <p>{subwayStatus(upDirect.trainSttus)}</p>
                       <p>급행</p>
-                      {Boolean(upDirect.lstcarAt) ? <p>막차</p> : null}
+                      {Boolean(upDirect.lstcarAt) ? null : <p>막차</p>}
                     </>
                   ) : null}
                 </div>
@@ -313,7 +313,7 @@ export default function RealTimeSubway({ props }: { props: string[] }) {
                   <p>{upLine.statnTnm}</p>
                   <p>{upLine.trainNo}</p>
                   <p>{subwayStatus(upLine.trainSttus)}</p>
-                  {Boolean(upLine.lstcarAt) ? <p>막차</p> : null}
+                  {Boolean(upLine.lstcarAt) ? null : <p>막차</p>}
                 </>
               ) : null}
             </div>
@@ -334,11 +334,11 @@ export default function RealTimeSubway({ props }: { props: string[] }) {
       {loading ? null : (
         <>
           {stationInfo}
-          {arrival.length !== 0 ? (
+          {arrival[0].length !== 0 ? (
             <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black text-white">
               <span>{selectStation}</span>
               <div className="flex gap-10 mb-10">
-                {arrival[0] ? (
+                {arrival[0].length !== 0 ? (
                   arrival[0].map((item: ArrivalStatus, key: number) => (
                     <div key={key}>
                       <p>{item.updnLine}</p>
@@ -370,7 +370,7 @@ export default function RealTimeSubway({ props }: { props: string[] }) {
                 )}
               </div>
               <div className="flex gap-10">
-                {arrival[1] ? (
+                {arrival[1].length !== 0 ? (
                   arrival[1].map((item: ArrivalStatus, key: number) => (
                     <div key={key}>
                       <p>{item.updnLine}</p>
